@@ -1,0 +1,93 @@
+# Implementation Plan
+
+- [ ] 1. Preparar las superficies de consulta del feature
+  - _Boundary:_ Tarea paraguas que agrupa 1.1-1.3; su alcance combinado son las vistas de lectura, las fuentes de datos de la app host y el estado compartido de consulta/retorno. No incluye lógica de alcance por rol, filtros de negocio ni KPIs (cubiertos en las tareas 2-3).
+- [ ] 1.1 Publicar las vistas ligeras de lectura para búsqueda y dashboard
+  - Crear las dos superficies de lectura que exponen solo las columnas necesarias para listado, KPIs y ordenación por defecto.
+  - Asegurar que la solución exporta estas superficies sin romper la dependencia con `jlb_incidencia`.
+  - Al finalizar, el feature dispone de una base de lectura optimizada y estable para búsqueda y dashboard.
+  - _Requirements: 3.1, 4.1, 6.1, 6.2_
+  - _Boundary:_ Vistas Dataverse de Consulta. Coordinar cualquier cambio compartido en `src\Other\Solution.xml`, `src\Other\Customizations.xml`, `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp` y `src\CanvasApps\jlb_logsticasur_95873.meta.xml` antes de fusionar.
+- [ ] 1.2 Habilitar en la app host las fuentes de datos de consulta
+  - Registrar en la canvas app las referencias necesarias a incidencias, tipos, perfiles y centros para que las pantallas de consulta puedan cargar datos autorizados.
+  - Verificar que la experiencia puede abrir sus pantallas sin dependencias de datos sin resolver.
+  - Al finalizar, la app reconoce todas las fuentes requeridas por la capa de consulta.
+  - _Requirements: 1.1, 3.4, 6.3_
+  - _Boundary:_ Integración de Fuentes de Consulta. Coordinar cualquier cambio compartido en `src\Other\Solution.xml`, `src\Other\Customizations.xml`, `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp` y `src\CanvasApps\jlb_logsticasur_95873.meta.xml` antes de fusionar.
+- [ ] 1.3 Preparar el estado compartido de consulta y retorno
+  - Definir el estado de sesión que conservará alcance, filtros activos, resultados visibles y origen de navegación.
+  - Dejar preparada la restauración del contexto para búsqueda y dashboard entre entradas y retornos dentro de la misma sesión.
+  - Al finalizar, la app cuenta con un estado base coherente para soportar continuidad de consulta y cambios de alcance en nuevos accesos.
+  - _Requirements: 3.3, 5.4, 6.3_
+  - _Boundary:_ Estado Compartido de Consulta. Coordinar cualquier cambio compartido en `src\Other\Solution.xml`, `src\Other\Customizations.xml`, `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp` y `src\CanvasApps\jlb_logsticasur_95873.meta.xml` antes de fusionar.
+- [ ] 2. Implementar el alcance autorizado y la búsqueda delegable
+  - _Boundary:_ Tarea paraguas que agrupa 2.1-2.3; su alcance combinado es `AdaptadorAlcanceBusqueda`, `ServicioConsultaIncidencias` y `PantallaBusquedaIncidencias`. Consume `AccessContext` verbatim y las superficies de la tarea 1; no implementa KPIs (tarea 3) ni navegación de detalle (tarea 4).
+- [ ] 2.1 Construir el adaptador de alcance de consulta
+  - Traducir el `AccessContext` canonico a un `ContextoAlcanceBusqueda` con alcance `self`, `center` o `global`, usando `dataverseUserId`, `perfilUsuarioId`, `centroTrabajoId`, `centroCodigo`, `centroTrabajoNombre` y `centroSecurityTeamId` para resolver permiso de dashboard y politica visible del filtro de centro.
+  - Impedir que un usuario amplíe su alcance mediante filtros o navegación directa.
+  - Al finalizar, búsqueda y dashboard consumen un único contrato de alcance coherente con `Operario`, `Supervisor` y `Administrador`.
+  - _Requirements: 1.2, 1.3, 1.4, 1.5, 2.4, 5.1, 5.2, 5.3, 5.4_
+  - _Boundary:_ AdaptadorAlcanceBusqueda. Coordinar cualquier cambio compartido en `src\Other\Solution.xml`, `src\Other\Customizations.xml`, `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp` y `src\CanvasApps\jlb_logsticasur_95873.meta.xml` antes de fusionar.
+  - _Depends: 1.3_
+
+- [ ] 2.2 Construir el servicio delegable de consulta de incidencias
+  - Implementar filtros combinables por estado, prioridad, fecha, tipo, responsable y centro con semántica AND sobre el alcance autorizado.
+  - Mantener visibles las incidencias con tipos históricos inactivos y devolver estados explícitos de vacío y error.
+  - Al finalizar, la consulta devuelve resultados completos del alcance base o filtrado sin truncado funcional observable.
+  - _Requirements: 1.1, 2.1, 2.2, 2.3, 2.5, 2.6, 2.7, 3.1, 3.4, 6.1, 6.2_
+  - _Boundary:_ ServicioConsultaIncidencias. Coordinar cualquier cambio compartido en `src\Other\Solution.xml`, `src\Other\Customizations.xml`, `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp` y `src\CanvasApps\jlb_logsticasur_95873.meta.xml` antes de fusionar.
+  - _Depends: 1.1, 1.2, 2.1_
+
+- [ ] 2.3 Construir la pantalla de búsqueda y listado
+  - Presentar filtros visibles según rol, el listado con columnas clave y las acciones de restablecer y reintentar.
+  - Conservar filtros y resultados al volver desde el detalle sin mostrar acciones de mutación en la pantalla.
+  - Al finalizar, un usuario puede localizar incidencias de su alcance y mantener su contexto de consulta entre navegaciones.
+  - _Requirements: 1.6, 2.1, 2.4, 2.6, 2.7, 3.1, 3.3, 3.4, 6.3_
+  - _Boundary:_ PantallaBusquedaIncidencias. Coordinar cualquier cambio compartido en `src\Other\Solution.xml`, `src\Other\Customizations.xml`, `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp` y `src\CanvasApps\jlb_logsticasur_95873.meta.xml` antes de fusionar.
+  - _Depends: 1.2, 1.3, 2.2_
+
+- [ ] 3. Implementar el dashboard operativo
+  - _Boundary:_ Tarea paraguas que agrupa 3.1-3.2; su alcance combinado es `ServicioKpisDashboard` y `PantallaDashboardIncidencias`. Reutiliza `AdaptadorAlcanceBusqueda` de la tarea 2 sin reimplementar la lógica de alcance; no toca búsqueda ni navegación de detalle.
+- [ ] 3.1 Construir el servicio de KPIs del dashboard
+  - Calcular incidencias abiertas, cerradas, tiempo medio de resolución, distribución por prioridad y distribución por centro usando el mismo alcance lógico del usuario.
+  - Permitir acotación adicional a un centro solo para `Administrador` sin perder la vista global al restablecerla.
+  - Al finalizar, el dashboard produce los cinco KPIs con estados cero o vacío claros y sin ampliar el perímetro autorizado.
+  - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.1, 5.2, 6.1, 6.2, 6.4_
+  - _Boundary:_ ServicioKpisDashboard. Coordinar cualquier cambio compartido en `src\Other\Solution.xml`, `src\Other\Customizations.xml`, `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp` y `src\CanvasApps\jlb_logsticasur_95873.meta.xml` antes de fusionar.
+  - _Depends: 1.1, 1.2, 2.1_
+
+- [ ] 3.2 Construir la pantalla de dashboard y sus restricciones de acceso
+  - Mostrar tarjetas y distribuciones con estados de carga, vacío y error, y denegar o redirigir a `Operario` sin exponer KPIs.
+  - Permitir drill-in hacia la búsqueda o el detalle en modo solo consulta preservando el contexto analítico cuando aplique.
+  - Al finalizar, `Supervisor` y `Administrador` ven KPIs coherentes con su alcance y `Operario` nunca accede al panel.
+  - _Requirements: 1.6, 4.1, 4.7, 5.2, 5.3, 6.3, 6.4_
+  - _Boundary:_ PantallaDashboardIncidencias. Coordinar cualquier cambio compartido en `src\Other\Solution.xml`, `src\Other\Customizations.xml`, `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp` y `src\CanvasApps\jlb_logsticasur_95873.meta.xml` antes de fusionar.
+  - _Depends: 1.3, 2.1, 3.1_
+
+- [ ] 4. Integrar la navegación de solo consulta
+  - _Boundary:_ Tarea paraguas para 4.1; su alcance es `NavegacionDetalleSoloLectura`, consumiendo verbatim el contrato `IncidentDetailNavigationInput`/`Result` publicado por `incidencias-core`. No redefine el detalle ni las pantallas de búsqueda/dashboard.
+- [ ] 4.1 Conectar la apertura del detalle existente en modo lectura
+  - Validar el acceso antes de abrir una incidencia desde busqueda o dashboard y pasar siempre `incidenciaId`, `origin`, `returnContextKey` y `mode = "read-only"` segun el contrato publicado por `incidencias-core` (`IncidentDetailNavigationInput`), sin campos adicionales ni renombrados.
+  - Restaurar filtros o contexto del dashboard al volver, sin habilitar acciones transaccionales desde este flujo.
+  - Al finalizar, cualquier apertura desde la capa de consulta llega al detalle correcto o devuelve una denegación segura.
+  - _Requirements: 1.5, 1.6, 3.2, 3.3, 6.3_
+  - _Boundary:_ NavegacionDetalleSoloLectura. Coordinar cualquier cambio compartido en `src\Other\Solution.xml`, `src\Other\Customizations.xml`, `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp` y `src\CanvasApps\jlb_logsticasur_95873.meta.xml` antes de fusionar.
+  - _Depends: 2.3, 3.2_
+
+- [ ] 5. Validar el comportamiento funcional y no funcional del feature
+  - _Boundary:_ Tarea paraguas que agrupa 5.1-5.2; su alcance combinado es la evidencia de validación funcional, de rendimiento y de compatibilidad sobre los componentes ya construidos en las tareas 1-4. Solo lee artefactos host compartidos para verificación, sin modificar contratos ni servicios.
+- [ ] 5.1 Verificar escenarios funcionales de búsqueda y dashboard
+  - Probar alcance por rol, combinación de filtros, tipos históricos, acceso denegado, conservación de contexto y KPIs visibles.
+  - Probar supervisor por centro, administrador global con acotación reversible, operario sin dashboard y un cambio administrativo de rol o centro que se refleje en el siguiente acceso del usuario.
+  - Al finalizar, cada comportamiento observable crítico del feature cuenta con evidencia reproducible de éxito o fallo esperado.
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 3.1, 3.2, 3.3, 3.4, 4.1, 4.7, 5.1, 5.2, 5.3, 5.4_
+  - _Boundary:_ AdaptadorAlcanceBusqueda, ServicioConsultaIncidencias, PantallaBusquedaIncidencias, PantallaDashboardIncidencias, NavegacionDetalleSoloLectura. Coordinar cualquier cambio compartido en `src\Other\Solution.xml`, `src\Other\Customizations.xml`, `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp` y `src\CanvasApps\jlb_logsticasur_95873.meta.xml` antes de fusionar.
+  - _Depends: 2.3, 3.2, 4.1_
+
+- [ ] 5.2 Verificar rendimiento, delegación y compatibilidad de clientes
+  - Medir búsquedas habituales y apertura del dashboard frente al objetivo de 3 segundos, revisando Monitor y warnings de delegación.
+  - Validar que la experiencia mantiene resultados completos y comportamiento consistente en navegador, Android, iPhone y tablet.
+  - Al finalizar, el feature dispone de evidencia de rendimiento, exactitud y compatibilidad en los clientes soportados.
+  - _Requirements: 4.2, 4.3, 4.4, 4.5, 4.6, 6.1, 6.2, 6.3, 6.4_
+  - _Boundary:_ ServicioKpisDashboard, PantallaBusquedaIncidencias, PantallaDashboardIncidencias. Coordinar cualquier cambio compartido en `src\Other\Solution.xml`, `src\Other\Customizations.xml`, `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp` y `src\CanvasApps\jlb_logsticasur_95873.meta.xml` antes de fusionar.
+  - _Depends: 5.1_

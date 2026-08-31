@@ -1,0 +1,105 @@
+# Implementation Plan
+
+- [ ] 1. Preparar la base de colaboración en Dataverse
+  - _Boundary:_ Tarea paraguas que agrupa 1.1-1.3; su alcance combinado es exclusivamente `src\Entities\jlb_comentario\**`, `src\Entities\jlb_adjunto\**` y el registro estructural mínimo de ambas tablas en artefactos host compartidos. No incluye pantallas, servicios de negocio ni contratos de integración (cubiertos en las tareas 2-4).
+- [ ] 1.1 Definir la tabla de comentarios y sus relaciones autoritativas
+  - Crear la tabla de comentarios con `IdComentario`, `IdIncidencia`, `Comentario`, `Usuario` y `Fecha`, usando la incidencia como referencia obligatoria y el perfil de usuario como autor.
+  - Configurar claves e índices para que `IdComentario` sea estable, el historial se consulte por incidencia y no haya edición funcional posterior.
+  - Dejar visible en la solución que la tabla solo soporta alta y lectura desde la app.
+  - Al finalizar, existe una tabla `Comentarios` enlazada a `Incidencias` que conserva entradas append-only por incidencia.
+  - _Requirements: 1.2, 1.4, 1.5, 2.4, 5.1_
+  - _Boundary:_ Propiedad exclusiva de `src\Entities\jlb_comentario\**`, de la tabla `jlb_comentario` y de las relaciones `jlb_comentario_jlb_incidencia`/`jlb_comentario_jlb_perfilusuario`; en artefactos host compartidos (`src\Other\Solution.xml`, `src\Other\Customizations.xml`, `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp`, `src\CanvasApps\jlb_logsticasur_95873.meta.xml`) solo registra referencias mínimas del comentario en bloques dedicados a colaboración, sin reordenar ni tocar componentes de `autenticacion-roles`, `incidencias-core`, `busqueda-dashboard` o `notificaciones`.
+- [ ] 1.2 Definir la tabla de adjuntos y su soporte nativo de archivo
+  - Crear la tabla de adjuntos con `IdAdjunto`, `IdIncidencia`, `NombreArchivo` y `RutaArchivo`, añadiendo la columna técnica de archivo necesaria para guardar el binario en Dataverse.
+  - Configurar la relación 1-N con `Incidencias` y las restricciones necesarias para que un adjunto solo se considere disponible cuando metadatos y archivo estén completos.
+  - Desactivar cualquier capacidad funcional de sustitución o borrado desde el flujo previsto de la app.
+  - Al finalizar, existe una tabla `Adjuntos` preparada para almacenar imágenes y PDF sin salir de Dataverse.
+  - _Requirements: 3.2, 4.1, 4.5, 5.1_
+  - _Boundary:_ Propiedad exclusiva de `src\Entities\jlb_adjunto\**`, de la tabla `jlb_adjunto`, de su columna de archivo y de la relación `jlb_adjunto_jlb_incidencia`; en `Solution.xml`, `Customizations.xml`, `.msapp` y `.meta.xml` solo añade los registros y dependencias estrictamente necesarios para adjuntos, manteniendo bloques separados de los cambios de `autenticacion-roles`, `incidencias-core`, `busqueda-dashboard` y `notificaciones`.
+- [ ] 1.3 Registrar los componentes de colaboración en la solución y la app host
+  - Actualizar el paquete de solución con las nuevas tablas, relaciones y dependencias de la canvas app.
+  - Declarar en la app las referencias de datos necesarias para cargar y refrescar comentarios y adjuntos dentro del detalle de incidencia.
+  - Verificar que no quedan referencias rotas entre la app, `Incidencias`, comentarios, adjuntos y perfiles de usuario.
+  - Al finalizar, el paquete fuente puede publicarse con la colaboración integrada en la solución existente.
+  - _Requirements: 2.1, 2.2, 5.5_
+  - _Boundary:_ Esta tarea es la única dueña de los artefactos host compartidos `src\Other\Solution.xml`, `src\Other\Customizations.xml`, `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp` y `src\CanvasApps\jlb_logsticasur_95873.meta.xml` en lo relativo al registro estructural de colaboración; los cambios deben limitarse a nodos/componentes `jlb_comentario` y `jlb_adjunto`, respetando el layout, los componentes y los bloques reservados por `autenticacion-roles`, `incidencias-core`, `busqueda-dashboard` y `notificaciones`.
+- [ ] 2. Implementar el control heredado de acceso a colaboración
+  - _Boundary:_ Tarea paraguas que agrupa 2.1-2.2; su alcance combinado es la `Política de Acceso Heredado a colaboración` y los guards/estados vacíos del detalle en `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp`. Solo lee `AccessContext` y `jlb_incidencia`; no redefine contratos de sesión ni el esquema de tablas (cubierto en la tarea 1).
+- [ ] 2.1 Construir la política reutilizable de lectura y alta sobre colaboración
+  - Reutilizar la visibilidad de la incidencia padre para decidir si el usuario puede leer comentarios y adjuntos, publicar un comentario o añadir un archivo.
+  - Bloquear de forma determinista las operaciones cuando la incidencia ya no exista o deje de estar dentro del alcance del usuario.
+  - Mantener la decisión preparada para ser consultada antes de mostrar contenido y antes de cada mutación.
+  - Al finalizar, existe una única regla funcional que gobierna toda la colaboración sin duplicar roles ni centros.
+  - _Requirements: 2.2, 2.3, 5.4_
+  - _Boundary:_ Propiedad exclusiva de la `Política de Acceso Heredado a colaboración` y de las fórmulas/contratos asociados dentro de `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp`; puede leer `AccessContext` y `jlb_incidencia`, pero no redefinir contratos de sesión ni cambiar ownership/sharing de `autenticacion-roles` o `incidencias-core`; cualquier toque a `.msapp` o `.meta.xml` debe quedar circunscrito al bloque de colaboración.
+- [ ] 2.2 Integrar guards y estados vacíos en el detalle de incidencia
+  - Conectar la política de acceso al detalle para que comentarios y adjuntos se carguen solo cuando la incidencia esté autorizada.
+  - Mostrar estados vacíos claros cuando una incidencia visible no tenga todavía comentarios o adjuntos.
+  - Asegurar que la denegación de acceso no filtra nombres de archivos, autores ni metadatos parciales.
+  - Al finalizar, el detalle distingue correctamente entre incidencia vacía, incidencia cargando e incidencia fuera de alcance.
+  - _Requirements: 2.1, 2.3, 2.5, 5.4_
+  - _Boundary:_ Propiedad exclusiva de los estados, guards y contenedores de colaboración dentro de la pantalla de detalle en `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp`; no debe alterar navegación, lifecycle ni áreas del detalle reservadas por `incidencias-core`, y cualquier ajuste en `.meta.xml` se limita a dependencias consumidas por estos guards.
+- [ ] 3. Desarrollar la experiencia operativa de comentarios y adjuntos
+  - _Boundary:_ Tarea paraguas que agrupa 3.1-3.3; su alcance combinado es el `Servicio de Publicación de Comentarios`, el `Panel de Historial de Comentarios`, el `Servicio de Gestión de Adjuntos` y el `Panel de Adjuntos de Incidencia`. Consume `jlb_comentario`/`jlb_adjunto` para publicar, listar, previsualizar y descargar; no toca el esquema (tarea 1) ni la política de acceso (tarea 2).
+- [ ] 3.1 (P) Implementar la publicación y el historial inmutable de comentarios
+  - Añadir el formulario de comentario dentro del detalle, con validación visible para impedir textos vacíos o solo con espacios.
+  - Registrar cada comentario con autor y fecha automáticos y refrescar el historial al confirmarse la persistencia.
+  - Ocultar cualquier acción de editar o eliminar comentarios ya mostrados.
+  - Al finalizar, un usuario autorizado puede añadir comentarios y verlos incorporados al historial sin alterar los previos.
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.4, 5.3_
+  - _Boundary:_ Propiedad exclusiva del `Servicio de Publicación de Comentarios` y del `Panel de Historial de Comentarios` en `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp`, consumiendo `jlb_comentario` y `jlb_perfilusuario` solo para publicar/leer historial; si requiere tocar `Solution.xml`, `Customizations.xml` o `.meta.xml`, esos cambios se restringen a referencias del panel de comentarios sin invadir bloques de `autenticacion-roles`, `incidencias-core`, `busqueda-dashboard` o `notificaciones`.
+- [ ] 3.2 (P) Implementar la carga validada de adjuntos de imagen y PDF
+  - Añadir al detalle la capacidad de seleccionar un archivo desde las fuentes compatibles del cliente y distinguir entre imagen y PDF.
+  - Rechazar formatos no admitidos con un mensaje explícito y no dejar confirmaciones ambiguas cuando la carga falle.
+  - Persistir el adjunto solo cuando el archivo quede almacenado y la ruta de descarga sea resoluble.
+  - Al finalizar, un usuario autorizado puede adjuntar imágenes o PDF válidos y ve el nuevo archivo en la lista solo tras confirmación completa.
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 5.3, 5.5_
+  - _Boundary:_ Propiedad exclusiva del `Servicio de Gestión de Adjuntos` y del flujo de alta del `Panel de Adjuntos de Incidencia` en `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp`, usando `jlb_adjunto` y su columna de archivo como único storage del feature; las ediciones sobre `Solution.xml`, `Customizations.xml` o `.meta.xml` se limitan a dependencias de adjuntos y no deben mezclar cambios de otros specs.
+  - _Depends: 2.1_
+
+- [ ] 3.3 Completar la visualización y descarga de adjuntos
+  - Mostrar el nombre de cada adjunto disponible en la incidencia y resolver la acción adecuada según su tipo.
+  - Presentar vista previa embebida para imágenes y ofrecer descarga para imágenes y PDF, con fallback a descarga si la vista previa falla.
+  - Mantener la lista libre de acciones de sustitución o borrado posteriores.
+  - Al finalizar, cada adjunto visible puede abrirse de la forma correcta sin romper la inmutabilidad del historial.
+  - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 5.5_
+  - _Boundary:_ Propiedad exclusiva de la lista, preview y descarga del `Panel de Adjuntos de Incidencia` en `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp`; puede leer `jlb_adjunto` y abrir recursos confirmados, pero no cambia la persistencia ni las zonas del detalle no relacionadas con colaboración; cualquier ajuste en artefactos host compartidos queda acotado a este panel.
+- [ ] 4. Integrar la colaboración con el contrato de incidencias
+  - _Boundary:_ Tarea paraguas que agrupa 4.1-4.2; su alcance combinado es el `Contrato de Integración de colaboración` (lookups a `jlb_incidencia`, fórmulas de enlace) y la consolidación cross-device de los paneles ya construidos en la tarea 3. No redefine el esquema ni el lifecycle de `incidencias-core`.
+- [ ] 4.1 Conectar comentarios y adjuntos con la referencia estable de la incidencia
+  - Usar la referencia de la incidencia ya aprobada por `incidencias-core` para enlazar toda creación y lectura de colaboración.
+  - Verificar que cambios de responsable o de estado de la incidencia no rompen el acceso a comentarios y adjuntos cuando el usuario siga autorizado.
+  - Mantener explícito en la experiencia que la colaboración no cambia el lifecycle de la incidencia ni añade notificaciones o búsqueda.
+  - Al finalizar, comentarios y adjuntos permanecen ligados al mismo `IdIncidencia` a lo largo del proceso operativo.
+  - _Requirements: 5.1, 5.2, 5.4_
+  - _Boundary:_ Propiedad exclusiva del `Contrato de Integración de colaboración`, de los lookups `jlb_comentario.jlb_incidenciaid`/`jlb_adjunto.jlb_incidenciaid` y de las fórmulas del detalle que consumen `incidenciaGuid` + `IdIncidencia`; puede tocar relaciones y fórmulas de enlace en `Customizations.xml`, `Solution.xml` y `.msapp`, pero no redefine el esquema ni el lifecycle de `incidencias-core` ni añade dependencias a `busqueda-dashboard` o `notificaciones`.
+- [ ] 4.2 Consolidar la experiencia cross-device y los mensajes operativos
+  - Ajustar la presentación del detalle para que navegador, Android, iPhone y tablet ofrezcan el mismo flujo base de comentar, adjuntar, previsualizar imágenes y descargar archivos.
+  - Revisar mensajes de validación, error de carga y denegación para que sean inequívocos en todos los clientes soportados.
+  - Confirmar que la respuesta visible del detalle y de las altas válidas se mantiene dentro del objetivo temporal fijado para uso habitual.
+  - Al finalizar, la colaboración se percibe consistente y accionable en todos los clientes soportados.
+  - _Requirements: 3.4, 5.3, 5.5_
+  - _Boundary:_ Propiedad exclusiva de layout responsive, mensajes y tiempos percibidos de los paneles de colaboración en `src\CanvasApps\jlb_logsticasur_95873_DocumentUri.msapp`; no altera otros flujos de la app host y cualquier metadato compartido (`.meta.xml`) solo se toca si afecta a clientes soportados de comentarios/adjuntos.
+- [ ] 5. Validar el feature completo de colaboración
+  - _Boundary:_ Tarea paraguas que agrupa 5.1-5.3; su alcance combinado es la evidencia de validación funcional, de adjuntos y de compatibilidad/rendimiento sobre los componentes de colaboración ya construidos. Solo lee artefactos host compartidos para verificación, sin modificar esquema, política ni servicios de otras tareas.
+- [ ] 5.1 Verificar comentarios y control de acceso con pruebas funcionales e integración
+  - Probar incidencia visible, incidencia fuera de alcance e incidencia ya no disponible antes de publicar comentario o consultar colaboración.
+  - Probar comentarios válidos e inválidos comprobando autor, fecha, aparición en historial y ausencia de edición o borrado.
+  - Confirmar que los estados vacíos aparecen cuando corresponde y desaparecen tras la primera alta exitosa.
+  - Al finalizar, existe evidencia reproducible de que comentarios y permisos heredados cumplen los escenarios positivos y negativos clave.
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.2, 2.3, 2.4, 2.5, 5.4_
+  - _Boundary:_ Propiedad exclusiva de la evidencia de validación de comentarios, guards y estados vacíos sobre `jlb_comentario`, `jlb_perfilusuario`, `jlb_incidencia` y el detalle host; no introduce cambios de esquema y cualquier lectura de `Solution.xml`, `Customizations.xml`, `.msapp` o `.meta.xml` es solo de verificación, evitando mezclar arreglos de otros specs durante la validación.
+- [ ] 5.2 Verificar adjuntos, previsualización y descarga con pruebas dirigidas
+  - Probar carga correcta de imágenes y PDF, rechazo de formatos no admitidos y cancelación limpia ante fallo de subida.
+  - Probar vista previa de imágenes, descarga de imágenes/PDF y fallback de descarga cuando la previsualización no sea posible.
+  - Confirmar que no existen acciones funcionales de sustituir o eliminar adjuntos ya registrados.
+  - Al finalizar, el flujo de adjuntos dispone de evidencia suficiente sobre almacenamiento, consulta y recuperación segura.
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4, 4.5_
+  - _Boundary:_ Propiedad exclusiva de la evidencia de validación del flujo de `jlb_adjunto`, su columna de archivo y el `Panel de Adjuntos de Incidencia`; no modifica contratos de otros specs y cualquier inspección de artefactos host compartidos se limita a comprobar que preview/descarga usan solo los componentes de colaboración.
+- [ ] 5.3 Verificar compatibilidad, rendimiento y límites de alcance
+  - Validar en navegador, Android, iPhone y tablet el mismo flujo base de detalle, comentario, adjunto y descarga según permisos.
+  - Medir que la apertura del detalle y la confirmación visible de comentarios o adjuntos válidos se reflejan en 3 segundos o menos en condiciones habituales.
+  - Confirmar que el feature no introduce cambios sobre lifecycle, búsqueda, dashboard ni notificaciones más allá de la colaboración descrita.
+  - Al finalizar, el spec queda validado como extensión acotada, consistente y preparada para implementación autónoma.
+  - _Requirements: 2.1, 5.1, 5.2, 5.3, 5.5_
+  - _Boundary:_ Propiedad exclusiva de la evidencia transversal de compatibilidad, rendimiento y respeto de boundary para los paneles y tablas de colaboración; esta tarea verifica en modo lectura `Solution.xml`, `Customizations.xml`, `.msapp` y `.meta.xml` para asegurar que los cambios compartidos quedan acotados a colaboración y no pisan áreas de `autenticacion-roles`, `incidencias-core`, `busqueda-dashboard` o `notificaciones`.

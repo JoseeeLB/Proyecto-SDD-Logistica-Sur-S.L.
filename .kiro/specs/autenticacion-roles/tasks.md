@@ -1,0 +1,99 @@
+﻿# Implementation Plan
+
+- [ ] 1. Preparar la base Dataverse del control de acceso
+  - _Boundary:_ Modelo de Seguridad de Centro y Perfil
+- [ ] 1.1 Crear el catálogo de centros de trabajo y su vínculo de seguridad
+  - Crear la tabla `jlb_centrotrabajo` con código único, nombre, estado y referencia obligatoria al equipo de seguridad del centro cuando esté activo.
+  - Dejar publicada una vista o formulario básico que permita cargar y revisar centros antes de habilitar usuarios finales.
+  - Al finalizar, cada centro activo puede almacenar el equipo que los specs posteriores usarán para ownership o compartición.
+  - _Requirements: 2.1, 4.1, 4.2, 4.3, 4.4, 4.5_
+  - _Boundary:_ Modelo de Seguridad de Centro y Perfil
+- [ ] 1.2 Crear el perfil autoritativo de usuario y el rol único de negocio
+  - Crear `jlb_perfilusuario` con lookup a `systemuser`, `jlb_entraobjectid`, `jlb_correocorporativo`, rol de negocio de valor único y centro obligatorio.
+  - Configurar claves y validaciones para impedir perfiles duplicados, perfiles sin centro y combinaciones ambiguas de rol.
+  - Al finalizar, cada usuario operativo activo tiene como máximo un perfil resoluble por `EntraObjectId`.
+  - _Requirements: 1.4, 2.1, 2.2, 2.3, 2.4, 3.3_
+  - _Boundary:_ Modelo de Seguridad de Centro y Perfil
+- [ ] 1.3 Incorporar los nuevos componentes al paquete de solución
+  - Actualizar `Solution.xml` y `Customizations.xml` con tablas, relaciones, choice y artefactos exportados necesarios para el feature.
+  - Verificar que la solución puede publicar los metadatos sin dejar dependencias rotas entre app, tablas y roles.
+  - Al finalizar, el paquete fuente contiene todos los componentes base del modelo de acceso.
+  - _Requirements: 2.1, 2.3, 4.5_
+  - _Boundary:_ Modelo de Seguridad de Centro y Perfil
+- [ ] 2. Implementar el arranque autenticado de la canvas app
+  - _Boundary:_ Canvas Bootstrap de Acceso, Repositorio de Perfil de Usuario
+- [ ] 2.1 Registrar conexiones y un estado bloqueante de inicio
+  - Añadir a la app las referencias de conexión necesarias para identidad visible y acceso al perfil de Dataverse.
+  - Implementar los estados `loading` y `blocked` para impedir que se muestren datos o acciones antes de terminar la resolución de acceso.
+  - Al finalizar, abrir la app sin contexto válido deja al usuario en una experiencia bloqueante sin datos parciales.
+  - _Requirements: 1.1, 1.2, 1.3, 5.1, 5.2, 5.4_
+  - _Boundary:_ Canvas Bootstrap de Acceso
+- [ ] 2.2 Implementar la resolución del perfil autoritativo
+  - Leer `User().EntraObjectId`, consultar un único perfil activo y materializar el resultado en un contrato de acceso con rol, centro y equipo de seguridad.
+  - Traducir perfil inexistente, duplicado, sin centro o bloqueado a errores explícitos y bloqueantes.
+  - Al finalizar, la app puede distinguir de forma determinista entre acceso válido y acceso denegado por perfil.
+  - _Requirements: 2.1, 2.2, 2.3, 3.3, 4.5, 5.2, 5.3_
+  - _Boundary:_ Repositorio de Perfil de Usuario
+- [ ] 2.3 Integrar el contexto de acceso en la sesión visible del usuario
+  - Conectar el resultado del repositorio con el arranque de la app para poblar el `AccessContext` canónico (`perfilUsuarioId`, `dataScope`, rol, centro y datos visibles de usuario) y mostrar nombre, correo, rol y centro.
+  - Aplicar fallback visible cuando el perfil enriquecido de Office 365 Users no aporte datos adicionales, sin cambiar la clave de autorización.
+  - Al finalizar, un usuario válido entra en modo `ready` viendo su contexto completo en la experiencia inicial.
+  - _Requirements: 1.4, 2.4, 5.1, 5.3_
+  - _Boundary:_ Canvas Bootstrap de Acceso, Repositorio de Perfil de Usuario
+  - _Depends: 2.2_
+
+- [ ] 3. Aplicar autorización funcional por rol en la UI
+  - _Boundary:_ Matriz de Autorización UI, Canvas Bootstrap de Acceso
+- [ ] 3.1 Definir una matriz reutilizable de capacidades por rol
+  - Traducir los roles Operario, Supervisor y Administrador a capacidades observables de pantalla, navegación y acción.
+  - Mantener el contrato preparado para que specs posteriores añadan capacidades sin redefinir los roles base.
+  - Al finalizar, existe una única fuente de verdad para decidir qué puede hacer cada rol dentro de la app.
+  - _Requirements: 2.3, 3.1, 3.4, 4.5_
+  - _Boundary:_ Matriz de Autorización UI
+- [ ] 3.2 Proteger pantallas, acciones y navegación directa
+  - Aplicar guards de entrada a pantallas y acciones restringidas para que la autorización no dependa solo de ocultar controles.
+  - Redirigir o bloquear accesos no autorizados sin mostrar datos de la capacidad restringida.
+  - Al finalizar, un intento de acceso directo o indirecto a una capacidad no permitida termina siempre en denegación segura.
+  - _Requirements: 1.2, 3.1, 3.2, 3.4, 4.2_
+  - _Boundary:_ Matriz de Autorización UI
+- [ ] 3.3 Aplicar refresco de permisos en cada nuevo inicio
+  - Forzar que el rol y el centro se recalculen al reabrir o recargar la app, sin reutilizar un contexto obsoleto entre sesiones.
+  - Comunicar al usuario cuando una recarga cambie su alcance o lo deje bloqueado por cambios administrativos.
+  - Al finalizar, cualquier cambio de rol o centro en Dataverse se refleja desde el siguiente inicio de la app.
+  - _Requirements: 2.2, 3.3, 5.2_
+  - _Boundary:_ Canvas Bootstrap de Acceso, Matriz de Autorización UI
+  - _Depends: 2.3_
+
+- [ ] 4. Establecer la base reutilizable de seguridad por centro
+  - _Boundary:_ Modelo de Seguridad de Centro y Perfil, Repositorio de Perfil de Usuario
+- [ ] 4.1 Configurar roles técnicos mínimos y el patrón de equipos por centro
+  - Definir los security roles de Operario, Supervisor y Administrador con el mínimo acceso necesario para ejecutar la app y consultar el modelo base.
+  - Establecer el patrón operativo por el que cada centro activo queda asociado a un owner team o grupo de Entra para el perímetro de datos del centro.
+  - Al finalizar, la solución dispone de un patrón repetible para separar acceso global, acceso por centro y acceso individual.
+  - _Requirements: 1.2, 4.1, 4.3, 4.4, 5.4_
+  - _Boundary:_ Modelo de Seguridad de Centro y Perfil
+- [ ] 4.2 Materializar el contrato de alcance para specs consumidoras
+  - Exponer en el `AccessContext` canónico el `dataScope` esperado (`self`, `center`, `global`) junto con `perfilUsuarioId` y `centroSecurityTeamId` para consumo downstream.
+  - Verificar que el modelo no añade acceso masivo a Operarios por pertenecer al mismo centro que un Supervisor.
+  - Al finalizar, los specs dependientes pueden reutilizar rol, centro y equipo sin redefinir la base de seguridad.
+  - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
+  - _Boundary:_ Repositorio de Perfil de Usuario, Modelo de Seguridad de Centro y Perfil
+  - _Depends: 2.2, 4.1_
+
+- [ ] 5. Validar la experiencia completa de acceso
+  - _Boundary:_ Canvas Bootstrap de Acceso, Matriz de Autorización UI, Modelo de Seguridad de Centro y Perfil, Repositorio de Perfil de Usuario
+- [ ] 5.1 Validar escenarios positivos y negativos de autenticación y autorización
+  - Probar usuario válido, usuario sin perfil, perfil duplicado, centro sin equipo y acceso a capacidad restringida.
+  - Confirmar en navegador, Android, iPhone y tablet que la app mantiene el mismo comportamiento de bloqueo o habilitación.
+  - Al finalizar, cada criterio observable de acceso tiene al menos un escenario validado en clientes soportados.
+  - _Requirements: 1.1, 1.2, 1.3, 2.2, 3.2, 3.4, 5.1, 5.2, 5.4_
+  - _Boundary:_ Canvas Bootstrap de Acceso, Matriz de Autorización UI, Modelo de Seguridad de Centro y Perfil
+  - _Depends: 3.3, 4.2_
+
+- [ ] 5.2 Validar rendimiento inicial y consistencia del contexto
+  - Medir el tiempo de arranque con perfil válido y revisar que la experiencia autorizada queda lista dentro del objetivo de 3 segundos en condiciones habituales.
+  - Verificar que nombre, correo, rol y centro permanecen consistentes durante la sesión y se refrescan al iniciar de nuevo.
+  - Al finalizar, el feature dispone de evidencia de tiempo de carga y consistencia de contexto para su salida.
+  - _Requirements: 1.4, 2.4, 3.3, 5.3_
+  - _Boundary:_ Canvas Bootstrap de Acceso, Repositorio de Perfil de Usuario
+  - _Depends: 2.3, 5.1_
