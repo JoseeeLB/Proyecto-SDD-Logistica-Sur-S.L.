@@ -2,7 +2,7 @@
 
 - [ ] 1. Preparar la base Dataverse del control de acceso
   - _Boundary:_ Modelo de Seguridad de Centro y Perfil
-- [ ] 1.1 Crear el catálogo de centros de trabajo y su vínculo de seguridad
+- [x] 1.1 Crear el catálogo de centros de trabajo y su vínculo de seguridad
   - Crear la tabla `jlb_centrotrabajo` con código único, nombre, estado y referencia obligatoria al equipo de seguridad del centro cuando esté activo.
   - Dejar publicada una vista o formulario básico que permita cargar y revisar centros antes de habilitar usuarios finales.
   - Al finalizar, cada centro activo puede almacenar el equipo que los specs posteriores usarán para ownership o compartición.
