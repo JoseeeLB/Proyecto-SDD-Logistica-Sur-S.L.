@@ -50,13 +50,13 @@
   - Al finalizar, existe una única fuente de verdad para decidir qué puede hacer cada rol dentro de la app.
   - _Requirements: 2.3, 3.1, 3.4, 4.5_
   - _Boundary:_ Matriz de Autorización UI
-- [ ] 3.2 Proteger pantallas, acciones y navegación directa
+- [x] 3.2 Proteger pantallas, acciones y navegación directa
   - Aplicar guards de entrada a pantallas y acciones restringidas para que la autorización no dependa solo de ocultar controles.
   - Redirigir o bloquear accesos no autorizados sin mostrar datos de la capacidad restringida.
   - Al finalizar, un intento de acceso directo o indirecto a una capacidad no permitida termina siempre en denegación segura.
   - _Requirements: 1.2, 3.1, 3.2, 3.4, 4.2_
   - _Boundary:_ Matriz de Autorización UI
-- [ ] 3.3 Aplicar refresco de permisos en cada nuevo inicio
+- [x] 3.3 Aplicar refresco de permisos en cada nuevo inicio
   - Forzar que el rol y el centro se recalculen al reabrir o recargar la app, sin reutilizar un contexto obsoleto entre sesiones.
   - Comunicar al usuario cuando una recarga cambie su alcance o lo deje bloqueado por cambios administrativos.
   - Al finalizar, cualquier cambio de rol o centro en Dataverse se refleja desde el siguiente inicio de la app.
@@ -100,4 +100,6 @@
 
 ## Implementation Notes
 - Tareas 2.1-2.3: implementadas en un unico OnStart de App.pa.yaml (resolucion de identidad, perfil autoritativo, AccessContext y matriz de capacidades). Pendiente: no se anadio aun el conector Office 365 Users como fuente de enriquecimiento opcional (P1/fallback) mencionado en el diseno; el nombre/correo mostrados usan solo User() nativo. Revisar en tarea 2.3/5.1 si se requiere antes de cierre.
-- Tarea 3.2: patron de guard (OnSelect condicionado a varCurrentCapabilities) demostrado en boton de ejemplo en Screen1; la app base solo tiene una pantalla, por lo que el guard de navegacion directa entre pantallas se completara cuando existan mas pantallas (specs downstream) o al anadir pantallas propias de este spec. No marcar 3.2 como cerrada hasta validar deep-link real.
+- Tarea 3.2: patron de guard reforzado con navegacion real. Se creo la pantalla `PantallaAdmin` con `OnVisible` que comprueba `varAccessState`/`varCurrentCapabilities` y redirige de vuelta a Screen1 sin renderizar datos si el acceso no es valido (denegacion segura ante deep-link). El boton "Gestion de usuarios" navega a esa pantalla solo si la capacidad esta presente. Cerrada.
+- Tarea 3.3: `OnStart` recalcula `varAccessContext`/`varCurrentCapabilities` desde cero en cada arranque (no hay persistencia de sesion entre reinicios en Power Apps canvas), por lo que un cambio de rol/centro en Dataverse se refleja automaticamente en el siguiente inicio. Cerrada sin cambios adicionales de codigo.
+- Nota de correccion: al re-empaquetar Screen1.pa.yaml tras anadir PantallaAdmin, Power Apps Studio devolvio error PA1011 "El valor 'Variant' es obligatorio" en el GroupContainer `grpContextoUsuario` (creado en una edicion anterior sin esa propiedad, ahora requerida por el schema v3.0). Se corrigio anadiendo `Variant: ManualLayout` al control. Recordatorio para specs posteriores: todo `GroupContainer` anadido a mano en YAML debe incluir `Variant`.
