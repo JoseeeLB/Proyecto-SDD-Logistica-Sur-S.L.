@@ -22,19 +22,19 @@
   - _Boundary:_ Modelo de Seguridad de Centro y Perfil
 - [ ] 2. Implementar el arranque autenticado de la canvas app
   - _Boundary:_ Canvas Bootstrap de Acceso, Repositorio de Perfil de Usuario
-- [ ] 2.1 Registrar conexiones y un estado bloqueante de inicio
+- [x] 2.1 Registrar conexiones y un estado bloqueante de inicio
   - Añadir a la app las referencias de conexión necesarias para identidad visible y acceso al perfil de Dataverse.
   - Implementar los estados `loading` y `blocked` para impedir que se muestren datos o acciones antes de terminar la resolución de acceso.
   - Al finalizar, abrir la app sin contexto válido deja al usuario en una experiencia bloqueante sin datos parciales.
   - _Requirements: 1.1, 1.2, 1.3, 5.1, 5.2, 5.4_
   - _Boundary:_ Canvas Bootstrap de Acceso
-- [ ] 2.2 Implementar la resolución del perfil autoritativo
+- [x] 2.2 Implementar la resolución del perfil autoritativo
   - Leer `User().EntraObjectId`, consultar un único perfil activo y materializar el resultado en un contrato de acceso con rol, centro y equipo de seguridad.
   - Traducir perfil inexistente, duplicado, sin centro o bloqueado a errores explícitos y bloqueantes.
   - Al finalizar, la app puede distinguir de forma determinista entre acceso válido y acceso denegado por perfil.
   - _Requirements: 2.1, 2.2, 2.3, 3.3, 4.5, 5.2, 5.3_
   - _Boundary:_ Repositorio de Perfil de Usuario
-- [ ] 2.3 Integrar el contexto de acceso en la sesión visible del usuario
+- [x] 2.3 Integrar el contexto de acceso en la sesión visible del usuario
   - Conectar el resultado del repositorio con el arranque de la app para poblar el `AccessContext` canónico (`perfilUsuarioId`, `dataScope`, rol, centro y datos visibles de usuario) y mostrar nombre, correo, rol y centro.
   - Aplicar fallback visible cuando el perfil enriquecido de Office 365 Users no aporte datos adicionales, sin cambiar la clave de autorización.
   - Al finalizar, un usuario válido entra en modo `ready` viendo su contexto completo en la experiencia inicial.
@@ -97,3 +97,6 @@
   - _Requirements: 1.4, 2.4, 3.3, 5.3_
   - _Boundary:_ Canvas Bootstrap de Acceso, Repositorio de Perfil de Usuario
   - _Depends: 2.3, 5.1_
+
+## Implementation Notes
+- Tareas 2.1-2.3: implementadas en un unico OnStart de App.pa.yaml (resolucion de identidad, perfil autoritativo, AccessContext y matriz de capacidades). Pendiente: no se anadio aun el conector Office 365 Users como fuente de enriquecimiento opcional (P1/fallback) mencionado en el diseno; el nombre/correo mostrados usan solo User() nativo. Revisar en tarea 2.3/5.1 si se requiere antes de cierre.
