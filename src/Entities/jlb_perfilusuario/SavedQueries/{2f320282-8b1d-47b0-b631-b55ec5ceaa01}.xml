@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>1</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{2f320282-8b1d-47b0-b631-b55ec5ceaa01}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="jlb_nombreperfil" select="1" icon="1" preview="1">
+        <row name="result" id="jlb_perfilusuarioid">
+          <cell name="jlb_nombreperfil" width="300" />
+          <cell name="createdon" width="125" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>4</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="jlb_perfilusuario">
+          <attribute name="jlb_perfilusuarioid" />
+          <attribute name="jlb_nombreperfil" />
+          <attribute name="createdon" />
+          <order attribute="jlb_nombreperfil" descending="false" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="0" />
+          </filter>
+          <filter type="or" isquickfindfields="1">
+            <condition attribute="jlb_nombreperfil" operator="like" value="{0}" />
+          </filter>
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Búsqueda rápida de Perfiles de Usuario activos" languagecode="3082" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

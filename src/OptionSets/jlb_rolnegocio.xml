@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<optionset Name="jlb_rolnegocio" localizedName="Rol de Negocio" description="Rol de negocio unico del perfil de usuario" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <OptionSetType>picklist</OptionSetType>
+  <IsGlobal>1</IsGlobal>
+  <IntroducedVersion>1.0</IntroducedVersion>
+  <IsCustomizable>1</IsCustomizable>
+  <displaynames>
+    <displayname description="Rol de Negocio" languagecode="3082" />
+  </displaynames>
+  <Descriptions>
+    <Description description="Rol de negocio unico del perfil de usuario" languagecode="3082" />
+  </Descriptions>
+  <options>
+    <option value="858360000" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Operario" languagecode="3082" />
+      </labels>
+    </option>
+    <option value="858360001" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Supervisor" languagecode="3082" />
+      </labels>
+    </option>
+    <option value="858360002" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Administrador" languagecode="3082" />
+      </labels>
+    </option>
+  </options>
+</optionset>

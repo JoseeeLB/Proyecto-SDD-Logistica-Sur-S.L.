@@ -79,7 +79,9 @@
     </Publisher>
     <RootComponents>
       <RootComponent type="1" schemaName="jlb_centrotrabajo" behavior="0" />
+      <RootComponent type="1" schemaName="jlb_perfilusuario" behavior="0" />
       <RootComponent type="300" schemaName="jlb_logsticasur_95873" behavior="0" />
+      <RootComponent type="9" schemaName="jlb_rolnegocio" behavior="0" />
     </RootComponents>
     <MissingDependencies />
   </SolutionManifest>

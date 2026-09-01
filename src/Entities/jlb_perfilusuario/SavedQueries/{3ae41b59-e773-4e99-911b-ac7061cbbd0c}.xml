@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{3ae41b59-e773-4e99-911b-ac7061cbbd0c}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="jlb_nombreperfil" select="1" icon="1" preview="1">
+        <row name="result" id="jlb_perfilusuarioid">
+          <cell name="jlb_nombreperfil" width="300" />
+          <cell name="createdon" width="125" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>1</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="jlb_perfilusuario">
+          <attribute name="jlb_perfilusuarioid" />
+          <attribute name="jlb_nombreperfil" />
+          <attribute name="createdon" />
+          <order attribute="jlb_nombreperfil" descending="false" />
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Vista de búsqueda avanzada de Perfil de Usuario" languagecode="3082" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

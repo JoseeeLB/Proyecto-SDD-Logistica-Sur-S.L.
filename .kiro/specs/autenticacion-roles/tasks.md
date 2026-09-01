@@ -8,7 +8,7 @@
   - Al finalizar, cada centro activo puede almacenar el equipo que los specs posteriores usarán para ownership o compartición.
   - _Requirements: 2.1, 4.1, 4.2, 4.3, 4.4, 4.5_
   - _Boundary:_ Modelo de Seguridad de Centro y Perfil
-- [ ] 1.2 Crear el perfil autoritativo de usuario y el rol único de negocio
+- [x] 1.2 Crear el perfil autoritativo de usuario y el rol único de negocio
   - Crear `jlb_perfilusuario` con lookup a `systemuser`, `jlb_entraobjectid`, `jlb_correocorporativo`, rol de negocio de valor único y centro obligatorio.
   - Configurar claves y validaciones para impedir perfiles duplicados, perfiles sin centro y combinaciones ambiguas de rol.
   - Al finalizar, cada usuario operativo activo tiene como máximo un perfil resoluble por `EntraObjectId`.
