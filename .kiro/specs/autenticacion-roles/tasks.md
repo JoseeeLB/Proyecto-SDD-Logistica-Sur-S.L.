@@ -14,7 +14,7 @@
   - Al finalizar, cada usuario operativo activo tiene como máximo un perfil resoluble por `EntraObjectId`.
   - _Requirements: 1.4, 2.1, 2.2, 2.3, 2.4, 3.3_
   - _Boundary:_ Modelo de Seguridad de Centro y Perfil
-- [ ] 1.3 Incorporar los nuevos componentes al paquete de solución
+- [x] 1.3 Incorporar los nuevos componentes al paquete de solución
   - Actualizar `Solution.xml` y `Customizations.xml` con tablas, relaciones, choice y artefactos exportados necesarios para el feature.
   - Verificar que la solución puede publicar los metadatos sin dejar dependencias rotas entre app, tablas y roles.
   - Al finalizar, el paquete fuente contiene todos los componentes base del modelo de acceso.
