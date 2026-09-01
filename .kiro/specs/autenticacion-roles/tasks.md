@@ -44,7 +44,7 @@
 
 - [ ] 3. Aplicar autorización funcional por rol en la UI
   - _Boundary:_ Matriz de Autorización UI, Canvas Bootstrap de Acceso
-- [ ] 3.1 Definir una matriz reutilizable de capacidades por rol
+- [x] 3.1 Definir una matriz reutilizable de capacidades por rol
   - Traducir los roles Operario, Supervisor y Administrador a capacidades observables de pantalla, navegación y acción.
   - Mantener el contrato preparado para que specs posteriores añadan capacidades sin redefinir los roles base.
   - Al finalizar, existe una única fuente de verdad para decidir qué puede hacer cada rol dentro de la app.
@@ -100,3 +100,4 @@
 
 ## Implementation Notes
 - Tareas 2.1-2.3: implementadas en un unico OnStart de App.pa.yaml (resolucion de identidad, perfil autoritativo, AccessContext y matriz de capacidades). Pendiente: no se anadio aun el conector Office 365 Users como fuente de enriquecimiento opcional (P1/fallback) mencionado en el diseno; el nombre/correo mostrados usan solo User() nativo. Revisar en tarea 2.3/5.1 si se requiere antes de cierre.
+- Tarea 3.2: patron de guard (OnSelect condicionado a varCurrentCapabilities) demostrado en boton de ejemplo en Screen1; la app base solo tiene una pantalla, por lo que el guard de navegacion directa entre pantallas se completara cuando existan mas pantallas (specs downstream) o al anadir pantallas propias de este spec. No marcar 3.2 como cerrada hasta validar deep-link real.
